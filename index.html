@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
+        crossorigin="anonymous"></script>
+    <link href="style.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi&display=swap" rel="stylesheet">
+</head>
+
+<body onload="load()">
+    <div class="bodyimg">
+        <div class="container">
+            <div class="text-center pt-3">
+                <span id="head" class="ml2">Quote by Hazarat Ali عليه السلام</span>
+            </div>
+            <select class="btn btn-danger dropdown-toggle sticky-top mt-5 mb-3" name="" id="category"
+                onchange="renderQuote()">
+                <option value="0" disabled selected>Select Category</option>
+            </select>
+            <div id="rendomQuote" class="text-center" style="margin-top: 100px">
+                <h1 id="quote" style="font-family: 'Reem Kufi', sans-serif;font-size: 50px;"></h1>
+            </div>
+            <div id="dvQuote" class="row d-flex flex-wrap justify-content-around"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade " id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content ">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="exampleModalLabel"></h2>
+                </div>
+                <div class="modal-body">
+                    <h3 id="longQuote" class="ml3"></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
+    
+    <script type="text/javascript">
+        var excelRows;
+        function load() {
+            var excelUrl = "./Quote.ods";
+            var oReq = new XMLHttpRequest();
+            oReq.open("GET", excelUrl, true);
+            oReq.responseType = "blob";
+            oReq.onload = function () {
+                var blob = oReq.response;
+                Upload(oReq);
+            };
+            oReq.send();
+            textAnimation();
+            //document.getElementById('Qhead').style.display = "none";
+        }
+
+        function Upload(fileUpload) {
+            if (typeof FileReader != "undefined") {
+                var reader = new FileReader();
+                //For Browsers other than IE.
+                if (reader.readAsBinaryString) {
+                    reader.onload = function (e) {
+                        ProcessExcel(e.target.result);
+                    };
+                    reader.readAsBinaryString(fileUpload.response);
+                } else {
+                    //For IE Browser.
+                    reader.onload = function (e) {
+                        var data = "";
+                        var bytes = new Uint8Array(e.target.result);
+                        for (var i = 0; i < bytes.byteLength; i++) {
+                            data += String.fromCharCode(bytes[i]);
+                        }
+                        ProcessExcel(data);
+                    };
+                    reader.readAsArrayBuffer(fileUpload.response);
+                }
+            } else {
+                alert("This browser does not support HTML5.");
+            }
+        }
+
+        function ProcessExcel(data) {
+            var workbook = XLSX.read(data, {
+                type: "binary",
+            });
+            var firstSheet = workbook.SheetNames[0];
+            excelRows = XLSX.utils.sheet_to_row_object_array(
+                workbook.Sheets[firstSheet]
+            );
+            rendercategory();
+            rendomQuote();
+            var inst = setInterval(rendomQuote, 10000);
+        }
+
+        function rendercategory() {
+            var keys = Object.keys(excelRows[0]);
+            for (var i = 0; i < keys.length; i++) {
+                daySelect = document.getElementById("category");
+                daySelect.options[daySelect.options.length] = new Option(
+                    keys[i],
+                    keys[i]
+                );
+            }
+        }
+
+        function renderQuote() {
+            document.getElementById("dvQuote").innerHTML = "";
+            var key = document.getElementById("category").value;
+            var str = "";
+            for (var i = 0; i < excelRows.length; i++) {
+                if (excelRows[i][key] != undefined) {     
+                    var quote = excelRows[i][key]      
+                    if(excelRows[i][key].length > 60)
+                    {
+                        quote = quote.slice(0, 54) + " . . .";
+
+                    }
+                    str = str +
+                        `<div class="card col-3 shadow p-3 mb-5 bg-white rounded" style="width: 18rem;" 
+                        data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="modelRender('`+ key + `','` + excelRows[i][key] + `')">
+                        <div class="card-body">
+                        <h5 class="card-title">` + quote + `</h5>
+                    </div>
+                </div>`;
+                }
+            }
+            document.getElementById("dvQuote").innerHTML = str;
+            document.getElementById("rendomQuote").style.display = "none";
+        }
+
+        function rendomQuote() {
+            let keys = Object.keys(excelRows[0]);
+            var list = [];
+            for (var i = 0; i < excelRows.length; i++) {
+                keys.forEach((x) => {
+                    if (excelRows[i][x] != undefined) list.push(excelRows[i][x]);
+                });
+            }
+            const randomElement = list[Math.floor(Math.random() * list.length)];
+            document.getElementById("quote").innerHTML = randomElement;
+        }
+
+        function textAnimation() {
+            var textWrapper = document.querySelector(".ml2");
+            textWrapper.innerHTML = textWrapper.textContent.replace(
+                /\S/g,
+                "<span class='letter'>$&</span>"
+            );
+
+            anime
+                .timeline({ loop: false })
+                .add({
+                    targets: ".ml2 .letter",
+                    scale: [4, 1],
+                    opacity: [0, 1],
+                    translateZ: 0,
+                    easing: "easeOutExpo",
+                    duration: 950,
+                    delay: (el, i) => 70 * i,
+                })
+                .add({
+                    targets: ".ml2",
+                    opacity: 1,
+                    duration: 1000,
+                    easing: "easeOutExpo",
+                    delay: 1000,
+                });
+        }
+
+        function modelRender(key, quote) {
+            document.getElementById("exampleModalLabel").innerHTML = key;
+            document.getElementById("longQuote").innerHTML = quote;
+            var textWrapper = document.querySelector('.ml3');
+            textWrapper.innerHTML = textWrapper.textContent.replace(/\S/g, "<span class='letter'>$&</span>");
+
+            anime.timeline({loop: false})
+            .add({
+                targets: '.ml3 .letter',
+                opacity: [0,1],
+                easing: "easeInOutQuad",
+                duration: 2250,
+                delay: (el, i) => 50 * (i)
+            }).add({
+                targets: '.ml3',
+                opacity: 1,
+                duration: 1000,
+                easing: "easeOutExpo",
+                delay: 1000
+            });
+        }
+    </script>
+</body>
+
+</html>

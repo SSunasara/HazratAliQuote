@@ -1,0 +1,28 @@
+body, html {
+    height: 100%;
+    margin: 0;
+  }
+.card:hover{
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+}
+select{
+    color: black!important;
+    box-shadow: 0 1rem 3rem #0000002d!important;
+    background: white!important;
+    border: none!important;
+}
+.bodyimg{
+    background-image: url('m1.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    min-height: 100%; 
+}
+#head{
+    font-size: 70px;
+    font-family: 'Aref Ruqaa', serif;
+    text-shadow: 2px 2px 1px red;
+}
+.modal-content {
+    border-radius: 15px;
+    text-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
