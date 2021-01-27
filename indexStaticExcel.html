@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi&display=swap" rel="stylesheet">
 </head>
 
-<body onload="ProcessExcel()">
+<body onload="load()">
     <div class="bodyimg">
         <div class="container">
             <div class="text-center pt-3">
@@ -53,32 +53,58 @@
     
     <script type="text/javascript">
         var excelRows;
-        
-        function ProcessExcel() {
-            // var workbook = XLSX.read(data, {
-            //     type: "binary",
-            // });
-            // var firstSheet = workbook.SheetNames[0];
-            // excelRows = XLSX.utils.sheet_to_row_object_array(
-            //     workbook.Sheets[firstSheet]
-            // );
-            fetch("https://api.apispreadsheets.com/data/7231/").then(res=>{
-                if (res.status === 200){
-                    // SUCCESS
-                    res.json().then(data=>{
-                        excelRows = data.data;
-                        console.log(excelRows)
-                        rendercategory();
-                        rendomQuote();
-                        var inst = setInterval(rendomQuote, 10000);
-                    }).catch(err => console.log(err))
+        function load() {
+            var excelUrl = "./Quote.ods";
+            var oReq = new XMLHttpRequest();
+            oReq.open("GET", excelUrl, true);
+            oReq.responseType = "blob";
+            oReq.onload = function () {
+                var blob = oReq.response;
+                Upload(oReq);
+            };
+            oReq.send();
+            textAnimation();
+            //document.getElementById('Qhead').style.display = "none";
+        }
+
+        function Upload(fileUpload) {
+            if (typeof FileReader != "undefined") {
+                var reader = new FileReader();
+                //For Browsers other than IE.
+                if (reader.readAsBinaryString) {
+                    reader.onload = function (e) {
+                        ProcessExcel(e.target.result);
+                    };
+                    reader.readAsBinaryString(fileUpload.response);
+                } else {
+                    //For IE Browser.
+                    reader.onload = function (e) {
+                        var data = "";
+                        var bytes = new Uint8Array(e.target.result);
+                        for (var i = 0; i < bytes.byteLength; i++) {
+                            data += String.fromCharCode(bytes[i]);
+                        }
+                        ProcessExcel(data);
+                    };
+                    reader.readAsArrayBuffer(fileUpload.response);
                 }
-                else{
-                    // ERROR
-                }
-            })
-            
-            
+            } else {
+                alert("This browser does not support HTML5.");
+            }
+        }
+
+        function ProcessExcel(data) {
+            var workbook = XLSX.read(data, {
+                type: "binary",
+            });
+            var firstSheet = workbook.SheetNames[0];
+            excelRows = XLSX.utils.sheet_to_row_object_array(
+                workbook.Sheets[firstSheet]
+            );
+            console.log(excelRows)
+            rendercategory();
+            rendomQuote();
+            var inst = setInterval(rendomQuote, 10000);
         }
 
         function rendercategory() {
@@ -97,7 +123,7 @@
             var key = document.getElementById("category").value;
             var str = "";
             for (var i = 0; i < excelRows.length; i++) {
-                if (excelRows[i][key] != undefined && excelRows[i][key] != "") {     
+                if (excelRows[i][key] != undefined) {     
                     var quote = excelRows[i][key]      
                     if(excelRows[i][key].length > 60)
                     {
